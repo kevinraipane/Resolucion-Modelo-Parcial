@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
@@ -66,13 +67,21 @@ public class EstanteService {
 
     public int calcularRiesgoActual(Integer estanteId) {
         List<Lote> lotes = loteService.getLotesByEstanteId(estanteId);
+        LocalDate hoy = LocalDate.now();
         return lotes.stream()
+                .filter(lote -> lote.getCantidadKg() > 0
+                        && !lote.getFechaVencimiento().isBefore(hoy))  // solo lotes activos
                 .mapToInt(lote -> (int) (lote.getCantidadKg() * lote.getReactivo().getNivelPeligro()))
                 .sum();
     }
 
     private EstanteDTO toDTOWithCalculatedRisk(Estante estante) {
         int riesgo = calcularRiesgoActual(estante.getId());
-        return new EstanteDTO(estante.getId(), estante.getCodigoAlmacen(), estante.getCapacidadMaxKg(), estante.getRiesgoLimite(), riesgo);
+        return new EstanteDTO(
+                estante.getId(),
+                estante.getCodigoAlmacen(),
+                estante.getCapacidadMaxKg(),
+                estante.getRiesgoLimite(),
+                riesgo); // ← campo calculado que el mapper va a ignorar
     }
 }
