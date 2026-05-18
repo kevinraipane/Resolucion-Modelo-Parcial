@@ -9,6 +9,8 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface EstanteMapper {
+    // Con ignore = true le decimos al pana mapStruct: que este campo existe en el target (DTO) pero que no lo mapee,
+    // que nosotros como somos re capos nos vamos a encargar (**No le compila)
     @Mapping(target = "riesgoActual", ignore = true)
     EstanteDTO toDTO(Estante estante);
     Estante toEntity(EstanteCreateDTO dto);
