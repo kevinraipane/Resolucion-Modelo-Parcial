@@ -15,6 +15,7 @@ import com.example.Resolucion.Modelo.Parcial.lote.exception.LoteNotFoundExceptio
 import com.example.Resolucion.Modelo.Parcial.lote.mapper.LoteMapper;
 import com.example.Resolucion.Modelo.Parcial.lote.model.Lote;
 import com.example.Resolucion.Modelo.Parcial.lote.repository.LoteRepository;
+import com.example.Resolucion.Modelo.Parcial.reactivo.exception.ReactivoInactivoException;
 import com.example.Resolucion.Modelo.Parcial.reactivo.model.Reactivo;
 import com.example.Resolucion.Modelo.Parcial.reactivo.service.ReactivoService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,12 @@ public class LoteService {
     public LoteDTO crear(LoteCreateDTO dto) {
         Reactivo reactivo = reactivoService.getReactivoById(dto.idReactivo());
         Estante estante = estanteService.getEstanteById(dto.idEstante());
+
+        if (Boolean.FALSE.equals(reactivo.getActivo())) {
+            throw new ReactivoInactivoException(
+                    "No se puede crear un lote para el reactivo con ID " + reactivo.getId() +
+                            " porque está inactivo.");
+        }
 
         if (dto.fechaRecepcion().isBefore(LocalDate.now())) {
             throw new FechaRecepcionInvalidaException("La fecha de recepción no puede ser anterior a la fecha actual.");
@@ -70,8 +77,26 @@ public class LoteService {
 
     @Transactional
     public LoteDTO actualizar(Integer id, LoteUpdateDTO dto) {
-        Lote lote = loteRepository.findById(id).orElseThrow(() -> new LoteNotFoundException("Lote no encontrado con ID: " + id));
+        Lote lote = loteRepository.findById(id)
+                .orElseThrow(() -> new LoteNotFoundException("Lote no encontrado con ID: " + id));
+
         Estante estante = estanteService.getEstanteById(dto.idEstante());
+
+        // Validar vencimiento
+        if (dto.fechaVencimiento().isBefore(LocalDate.now().plusMonths(6))) {
+            throw new FechaVencimientoInvalidaException(
+                    "La fecha de vencimiento debe ser al menos 6 meses desde hoy.");
+        }
+
+        // Calcular el riesgo del estante destino, excluyendo la contribución actual de este lote
+        int riesgoSinEsteLote = estanteService.calcularRiesgoActual(estante.getId())
+                - (int) (lote.getCantidadKg() * lote.getReactivo().getNivelPeligro()); // casteo a int
+        int riesgoNuevo = (int) (dto.cantidadKg() * lote.getReactivo().getNivelPeligro());
+
+        if ((riesgoSinEsteLote + riesgoNuevo) > estante.getRiesgoLimite()) {
+            throw new RiesgoMaximoExcedidoException(
+                    "Operación rechazada: la actualización supera el riesgo límite del estante " + estante.getId());
+        }
 
         lote.setNroLote(dto.nroLote());
         lote.setFechaVencimiento(dto.fechaVencimiento());
