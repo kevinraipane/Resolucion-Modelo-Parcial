@@ -87,3 +87,6 @@ Las entidades deberán estar mapeadas correctamente dentro de Spring Boot. Se de
 * **DTOs Obligatorios:** No se pueden exponer las Entidades de JPA en los Controllers. Se deben usar DTOs para la entrada y salida de datos.
 * **Validaciones DTO:** El uso de `@Valid` y anotaciones de validation (como `@Min`, `@NotNull`) es obligatorio en los DTOs.
 * **Custom Exceptions:** Al menos una regla de negocio (ej. el Riesgo Máximo) debe lanzar una excepción propia que sea capturada por un `@ControllerAdvice`.
+
+## Endpoints en Postman con sus body y Params
+https://www.postman.com/kevinraipane/workspace/universidad/collection/45517576-a27f5ea4-6eae-4bd6-b894-a8cbe7eb0896?action=share&source=copy-link&creator=45517576
