@@ -59,12 +59,14 @@ public class ReactivoService {
             throw new ReactivoConLotesActivosException("El reactivo con ID " + id + " no puede eliminarse porque posee lotes activos.");
         }
 
-        reactivoRepository.delete(reactivo);
+        reactivo.setActivo(false);
+        reactivoRepository.save(reactivo);
     }
 
     @Transactional(readOnly = true)
     public List<ReactivoDTO> filtrarReactivos(String nombre, Integer nivelPeligro, Boolean esPrecursor) {
         Specification<Reactivo> spec = Specification.allOf(
+                ReactivoSpecification.isActivo(),
                 ReactivoSpecification.nombreContains(nombre),
                 ReactivoSpecification.nivelPeligroEquals(nivelPeligro),
                 ReactivoSpecification.esPrecursorEquals(esPrecursor)
