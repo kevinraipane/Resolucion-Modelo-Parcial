@@ -10,6 +10,10 @@ public class ReactivoSpecification {
                 : cb.like(cb.lower(root.get("nombre")), "%" + nombre.toLowerCase() + "%");
     }
 
+    public static Specification<Reactivo> isActivo() {
+        return (root, query, cb) -> cb.isTrue(root.get("activo"));
+    }
+
     public static Specification<Reactivo> nivelPeligroEquals(Integer nivelPeligro) {
         return (root, query, cb) -> nivelPeligro == null
                 ? cb.conjunction()
